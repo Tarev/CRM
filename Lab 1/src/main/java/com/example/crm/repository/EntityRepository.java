@@ -6,8 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Хранилище сущностей. Сейчас реализация хранит данные в памяти,
- * в лабораторной № 2 ее заменит Spring Data JPA.
+ * Хранилище сущностей.
  */
 public interface EntityRepository<T extends BaseEntity> {
 
