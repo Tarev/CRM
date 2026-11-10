@@ -78,7 +78,7 @@ CRM помогает компании работать с клиентами. С
 5. Приложение работает на `http://localhost:8080`. Примеры запросов есть в `requests.http`.
 
 Hibernate только проверяет, что таблицы совпадают с сущностями (`ddl-auto=validate`), сам он таблицы не создаёт.
-Если русские буквы в консоли отображаются кракозябрами, добавьте VM options `-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8`.
+Если русские буквы в консоли не отображаются, добавьте VM options `-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8`.
 
 ## REST API
 
