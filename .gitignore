@@ -3,3 +3,4 @@ target/
 *.iml
 .m2/
 logs/
+.vscode/
