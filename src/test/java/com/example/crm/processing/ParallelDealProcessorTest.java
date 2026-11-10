@@ -4,7 +4,6 @@ import com.example.crm.model.Deal;
 import com.example.crm.model.DealStatus;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -18,8 +17,9 @@ class ParallelDealProcessorTest {
     private List<Deal> createDeals(int count) {
         List<Deal> deals = new ArrayList<>();
         for (int i = 1; i <= count; i++) {
-            Deal deal = new Deal("Deal " + i, 1L, 1L, BigDecimal.TEN);
+            Deal deal = new Deal();
             deal.setId((long) i);
+            deal.setTitle("Deal " + i);
             deals.add(deal);
         }
         return deals;

@@ -1,52 +1,45 @@
 package com.example.crm.model;
 
-import com.example.crm.util.Validation;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
+@Entity
+@Table(name = "deals")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Deal extends BaseEntity {
 
-    private final String title;
-    private final Long clientId;
-    private final Long productId;
-    private final BigDecimal amount;
-    private DealStatus status;
+    @Column(name = "deal_number", nullable = false, unique = true, length = 50)
+    private String dealNumber;
 
-    public Deal(String title, Long clientId, Long productId, BigDecimal amount) {
-        this.title = Validation.requireNotBlank(title, "title");
-        this.clientId = Validation.requireNotNull(clientId, "clientId");
-        this.productId = Validation.requireNotNull(productId, "productId");
-        this.amount = Validation.requireNotNegative(amount, "amount");
-        this.status = DealStatus.NEW;
-    }
+    @Column(name = "title", nullable = false, length = 255)
+    private String title;
 
-    public String getTitle() {
-        return title;
-    }
+    @Column(name = "amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal amount;
 
-    public Long getClientId() {
-        return clientId;
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private DealStatus status = DealStatus.NEW;
 
-    public Long getProductId() {
-        return productId;
-    }
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "client_id", nullable = false)
+    private Client client;
 
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public DealStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(DealStatus status) {
-        this.status = Validation.requireNotNull(status, "status");
-    }
-
-    @Override
-    public String toString() {
-        return "Сделка #" + getId() + ": " + title + ", клиент " + clientId + ", продукт " + productId
-                + ", сумма " + amount + ", статус " + status;
-    }
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 }

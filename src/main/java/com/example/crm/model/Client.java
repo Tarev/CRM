@@ -1,41 +1,40 @@
 package com.example.crm.model;
 
-import com.example.crm.util.Validation;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Entity
+@Table(name = "clients")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Client extends BaseEntity {
 
-    private final String name;
-    private final String email;
-    private final String phone;
-    /** id компании клиента, может быть null (частное лицо). */
-    private final Long companyId;
+    @Column(name = "email", nullable = false, unique = true, length = 255)
+    private String email;
 
-    public Client(String name, String email, String phone, Long companyId) {
-        this.name = Validation.requireNotBlank(name, "name");
-        this.email = Validation.requireNotBlank(email, "email");
-        this.phone = Validation.requireNotBlank(phone, "phone");
-        this.companyId = companyId;
-    }
+    @Column(name = "name", nullable = false, length = 255)
+    private String name;
 
-    public String getName() {
-        return name;
-    }
+    @Column(name = "phone", length = 20)
+    private String phone;
 
-    public String getEmail() {
-        return email;
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "client_type", nullable = false, length = 10)
+    private ClientType clientType = ClientType.INDIVIDUAL;
 
-    public String getPhone() {
-        return phone;
-    }
-
-    public Long getCompanyId() {
-        return companyId;
-    }
-
-    @Override
-    public String toString() {
-        String company = companyId == null ? "нет" : String.valueOf(companyId);
-        return "Клиент #" + getId() + ": " + name + ", " + email + ", " + phone + ", компания: " + company;
-    }
+    /** Компания клиента, может быть null (частное лицо). */
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
 }

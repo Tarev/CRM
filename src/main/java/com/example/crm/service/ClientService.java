@@ -1,41 +1,63 @@
 package com.example.crm.service;
 
+import com.example.crm.dto.ClientRequest;
 import com.example.crm.model.Client;
-import com.example.crm.repository.EntityRepository;
+import com.example.crm.model.ClientType;
+import com.example.crm.model.Company;
+import com.example.crm.repository.ClientRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ClientService extends AbstractService<Client> {
 
-    public ClientService(EntityRepository<Client> repository) {
-        super(repository);
+    private final ClientRepository clientRepository;
+    private final CompanyService companyService;
+
+    public ClientService(ClientRepository clientRepository, CompanyService companyService) {
+        super(clientRepository);
+        this.clientRepository = clientRepository;
+        this.companyService = companyService;
     }
 
-    /** Ищет клиентов, в имени которых есть указанный текст (без учета регистра). */
-    public List<Client> findByName(String part) {
-        List<Client> result = new ArrayList<>();
-        if (part == null) {
-            return result;
-        }
-        String search = part.trim().toLowerCase();
-        for (Client client : findAll()) {
-            if (client.getName().toLowerCase().contains(search)) {
-                result.add(client);
-            }
-        }
-        return result;
+    /** Поиск по части имени, типу и компании. Любой параметр можно не указывать (null). */
+    public List<Client> search(String name, ClientType type, Long companyId) {
+        String searchName = name == null ? "" : name.trim();
+        return clientRepository.search(searchName, type, companyId);
     }
 
-    public List<Client> findByCompanyId(Long companyId) {
-        List<Client> result = new ArrayList<>();
-        for (Client client : findAll()) {
-            if (companyId != null && companyId.equals(client.getCompanyId())) {
-                result.add(client);
-            }
+    /** Создает клиента. Возвращает empty, если указанная компания не найдена. */
+    public Optional<Client> create(ClientRequest request) {
+        return fillAndSave(new Client(), request);
+    }
+
+    /** Обновляет клиента. Возвращает empty, если клиент или компания не найдены. */
+    public Optional<Client> update(Long id, ClientRequest request) {
+        Optional<Client> client = findById(id);
+        if (client.isEmpty()) {
+            return Optional.empty();
         }
-        return result;
+        return fillAndSave(client.get(), request);
+    }
+
+    private Optional<Client> fillAndSave(Client client, ClientRequest request) {
+        Company company = null;
+        if (request.getCompanyId() != null) {
+            Optional<Company> found = companyService.findById(request.getCompanyId());
+            if (found.isEmpty()) {
+                return Optional.empty();
+            }
+            company = found.get();
+        }
+        client.setEmail(request.getEmail());
+        client.setName(request.getName());
+        client.setPhone(request.getPhone());
+        if (request.getClientType() != null) {
+            client.setClientType(request.getClientType());
+        }
+        client.setCompany(company);
+        return Optional.of(save(client));
     }
 }

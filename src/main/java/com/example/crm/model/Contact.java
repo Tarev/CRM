@@ -1,42 +1,36 @@
 package com.example.crm.model;
 
-import com.example.crm.util.Validation;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Контактное лицо компании.
  */
+@Entity
+@Table(name = "contacts")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Contact extends BaseEntity {
 
-    private final String fullName;
-    private final String position;
-    private final String phone;
-    private final Long companyId;
+    @Column(name = "email", nullable = false, unique = true, length = 255)
+    private String email;
 
-    public Contact(String fullName, String position, String phone, Long companyId) {
-        this.fullName = Validation.requireNotBlank(fullName, "fullName");
-        this.position = Validation.requireNotBlank(position, "position");
-        this.phone = Validation.requireNotBlank(phone, "phone");
-        this.companyId = Validation.requireNotNull(companyId, "companyId");
-    }
+    @Column(name = "full_name", nullable = false, length = 255)
+    private String fullName;
 
-    public String getFullName() {
-        return fullName;
-    }
+    @Column(name = "position", length = 100)
+    private String position;
 
-    public String getPosition() {
-        return position;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public Long getCompanyId() {
-        return companyId;
-    }
-
-    @Override
-    public String toString() {
-        return "Контакт #" + getId() + ": " + fullName + ", " + position + ", " + phone + ", компания: " + companyId;
-    }
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
 }

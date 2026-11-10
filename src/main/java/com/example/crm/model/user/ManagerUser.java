@@ -1,18 +1,16 @@
 package com.example.crm.model.user;
 
-import com.example.crm.util.Validation;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import lombok.NoArgsConstructor;
 
+@Entity
+@DiscriminatorValue("MANAGER")
+@NoArgsConstructor
 public class ManagerUser extends User {
 
-    private final String department;
-
-    public ManagerUser(String login, String fullName, String department) {
+    public ManagerUser(String login, String fullName) {
         super(login, fullName);
-        this.department = Validation.requireNotBlank(department, "department");
-    }
-
-    public String getDepartment() {
-        return department;
     }
 
     @Override
@@ -22,6 +20,6 @@ public class ManagerUser extends User {
 
     @Override
     public String getAccessDescription() {
-        return "Работа с клиентами, сделками, задачами и заметками (без управления пользователями), отдел: " + department;
+        return "Работа с клиентами, сделками, задачами и заметками (без управления пользователями)";
     }
 }

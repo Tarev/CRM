@@ -1,53 +1,42 @@
 package com.example.crm.model;
 
-import com.example.crm.util.Validation;
+import com.example.crm.model.user.User;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
+@Entity
+@Table(name = "tasks")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Task extends BaseEntity {
 
-    private final String title;
-    private final Long dealId;
-    /** id пользователя-менеджера, которому назначена задача. */
-    private final Long assigneeId;
-    private final LocalDate deadline;
+    @Column(name = "title", nullable = false, length = 255)
+    private String title;
+
+    @Column(name = "deadline", nullable = false)
+    private LocalDate deadline;
+
+    @Column(name = "done", nullable = false)
     private boolean done;
 
-    public Task(String title, Long dealId, Long assigneeId, LocalDate deadline) {
-        this.title = Validation.requireNotBlank(title, "title");
-        this.dealId = Validation.requireNotNull(dealId, "dealId");
-        this.assigneeId = Validation.requireNotNull(assigneeId, "assigneeId");
-        this.deadline = Validation.requireNotNull(deadline, "deadline");
-        this.done = false;
-    }
+    /** Сделка, к которой относится задача. Может быть null (общая задача). */
+    @ManyToOne
+    @JoinColumn(name = "deal_id")
+    private Deal deal;
 
-    public String getTitle() {
-        return title;
-    }
-
-    public Long getDealId() {
-        return dealId;
-    }
-
-    public Long getAssigneeId() {
-        return assigneeId;
-    }
-
-    public LocalDate getDeadline() {
-        return deadline;
-    }
-
-    public boolean isDone() {
-        return done;
-    }
-
-    public void setDone(boolean done) {
-        this.done = done;
-    }
-
-    @Override
-    public String toString() {
-        return "Задача #" + getId() + ": " + title + ", сделка " + dealId + ", исполнитель " + assigneeId
-                + ", срок " + deadline + ", " + (done ? "выполнена" : "не выполнена");
-    }
+    /** Исполнитель задачи. */
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "assignee_id", nullable = false)
+    private User assignee;
 }

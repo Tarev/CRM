@@ -1,35 +1,35 @@
 package com.example.crm.model;
 
-import com.example.crm.util.Validation;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "notes")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Note extends BaseEntity {
 
-    private final Long dealId;
-    private final String text;
-    private final LocalDateTime createdAt;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    public Note(Long dealId, String text) {
-        this.dealId = Validation.requireNotNull(dealId, "dealId");
-        this.text = Validation.requireNotBlank(text, "text");
-        this.createdAt = LocalDateTime.now();
-    }
+    @Column(name = "text", nullable = false, columnDefinition = "TEXT")
+    private String text;
 
-    public Long getDealId() {
-        return dealId;
-    }
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "deal_id", nullable = false)
+    private Deal deal;
 
-    public String getText() {
-        return text;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    @Override
-    public String toString() {
-        return "Заметка #" + getId() + " (сделка " + dealId + ", " + createdAt.toLocalDate() + "): " + text;
+    public Note(Deal deal, String text) {
+        this.deal = deal;
+        this.text = text;
     }
 }
