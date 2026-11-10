@@ -1,0 +1,2 @@
+# Скопируйте в local.properties (этот файл не попадает в git) и укажите свой пароль
+spring.datasource.password=ВАШ_ПАРОЛЬ

@@ -1,0 +1,128 @@
+### Примеры запросов для IntelliJ HTTP Client (Ultimate). Перед запуском стартуйте приложение.
+@host = http://localhost:8080
+
+### ---------- Компании
+GET {{host}}/api/companies
+
+###
+GET {{host}}/api/companies?city=Москва
+
+###
+POST {{host}}/api/companies
+Content-Type: application/json
+
+{"name": "Новая компания", "city": "Самара"}
+
+###
+PUT {{host}}/api/companies/1
+Content-Type: application/json
+
+{"name": "Ромашка", "city": "Санкт-Петербург"}
+
+###
+DELETE {{host}}/api/companies/3
+
+### ---------- Клиенты
+GET {{host}}/api/clients
+
+###
+GET {{host}}/api/clients?name=иван&type=COMPANY
+
+###
+GET {{host}}/api/clients/1
+
+###
+POST {{host}}/api/clients
+Content-Type: application/json
+
+{"email": "petr@mail.ru", "name": "Петр Орлов", "phone": "+7(912)345-67-89", "clientType": "INDIVIDUAL", "companyId": 1}
+
+###
+PUT {{host}}/api/clients/3
+Content-Type: application/json
+
+{"email": "oleg@mail.ru", "name": "Олег Смирнов", "phone": "+7(900)333-33-33", "clientType": "INDIVIDUAL"}
+
+###
+DELETE {{host}}/api/clients/4
+
+### ---------- Контакты
+GET {{host}}/api/contacts?companyId=1
+
+###
+POST {{host}}/api/contacts
+Content-Type: application/json
+
+{"email": "new.contact@romashka.ru", "fullName": "Сергей Ким", "position": "Менеджер", "companyId": 1}
+
+### ---------- Продукты
+GET {{host}}/api/products?maxPrice=8000
+
+###
+POST {{host}}/api/products
+Content-Type: application/json
+
+{"article": "NEW-001", "name": "Внедрение", "price": 25000.00}
+
+### ---------- Сделки
+GET {{host}}/api/deals
+
+###
+GET {{host}}/api/deals?status=NEW&minAmount=5000
+
+###
+POST {{host}}/api/deals
+Content-Type: application/json
+
+{"dealNumber": "D-2026-100", "title": "Новая сделка", "amount": 12000.50, "clientId": 1, "productId": 2}
+
+###
+PATCH {{host}}/api/deals/2/status?status=WON
+
+###
+GET {{host}}/api/deals/total?status=WON
+
+### Многопоточная обработка новых сделок (потоки deal-worker-N видны в логе)
+POST {{host}}/api/deals/process-new
+
+### ---------- Задачи
+GET {{host}}/api/tasks?assigneeId=2
+
+###
+GET {{host}}/api/tasks?overdue=true
+
+###
+POST {{host}}/api/tasks
+Content-Type: application/json
+
+{"title": "Подготовить КП", "deadline": "2030-01-01", "assigneeId": 2, "dealId": 3}
+
+###
+PATCH {{host}}/api/tasks/2/done
+
+### ---------- Заметки
+GET {{host}}/api/notes?dealId=1
+
+###
+POST {{host}}/api/notes
+Content-Type: application/json
+
+{"dealId": 1, "text": "Клиент согласен на условия"}
+
+### ---------- Пользователи
+GET {{host}}/api/users
+
+###
+GET {{host}}/api/users?role=MANAGER
+
+###
+POST {{host}}/api/users
+Content-Type: application/json
+
+{"login": "manager3", "fullName": "Менеджер Дмитрий", "role": "MANAGER"}
+
+###
+POST {{host}}/api/users
+Content-Type: application/json
+
+{"login": "anna", "fullName": "Анна Сидорова", "role": "CUSTOMER", "clientId": 2}

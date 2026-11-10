@@ -1,0 +1,8 @@
+target/
+.idea/
+*.iml
+.m2/
+logs/
+.vscode/
+# локальные настройки с паролем БД (не коммитим)
+local.properties
