@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/deals")
@@ -41,50 +40,29 @@ public class DealController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Deal> getById(@PathVariable Long id) {
-        Optional<Deal> found = dealService.findById(id);
-        if (found.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(found.get());
+        return ResponseEntity.ok(dealService.getById(id));
     }
 
     @PostMapping
     public ResponseEntity<Deal> create(@Valid @RequestBody DealRequest request) {
-        Optional<Deal> created = dealService.create(request);
-        if (created.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(created.get());
+        return ResponseEntity.status(HttpStatus.CREATED).body(dealService.create(request));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Deal> update(@PathVariable Long id, @Valid @RequestBody DealRequest request) {
-        if (!dealService.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        Optional<Deal> updated = dealService.update(id, request);
-        if (updated.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(updated.get());
+        return ResponseEntity.ok(dealService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (!dealService.deleteById(id)) {
-            return ResponseEntity.notFound().build();
-        }
+        dealService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
     /** Меняет только статус сделки. */
     @PatchMapping("/{id}/status")
     public ResponseEntity<Deal> changeStatus(@PathVariable Long id, @RequestParam DealStatus status) {
-        Optional<Deal> deal = dealService.changeStatus(id, status);
-        if (deal.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(deal.get());
+        return ResponseEntity.ok(dealService.changeStatus(id, status));
     }
 
     /** Сумма всех сделок с указанным статусом. */

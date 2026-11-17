@@ -1,8 +1,11 @@
 package com.example.crm.service;
 
 import com.example.crm.MockRepositoriesTest;
+import com.example.crm.exception.EntityNotFoundException;
+import com.example.crm.exception.InvalidReferenceException;
 import com.example.crm.model.Company;
 import com.example.crm.model.Product;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -13,6 +16,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -54,10 +58,10 @@ class CompanyAndProductServiceTest extends MockRepositoriesTest {
     }
 
     @Test
-    void updateMissingCompanyReturnsEmpty() {
+    void updateMissingCompanyThrowsException() {
         when(companyRepository.existsById(5L)).thenReturn(false);
 
-        assertTrue(companyService.update(5L, new Company("A", "Moscow")).isEmpty());
+        assertThrows(EntityNotFoundException.class, () -> companyService.update(5L, new Company("A", "Moscow")));
         verify(companyRepository, never()).save(any());
     }
 
@@ -66,16 +70,16 @@ class CompanyAndProductServiceTest extends MockRepositoriesTest {
         when(companyRepository.existsById(5L)).thenReturn(true);
         when(companyRepository.save(any(Company.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Optional<Company> result = companyService.update(5L, new Company("B", "Kazan"));
+        Company result = companyService.update(5L, new Company("B", "Kazan"));
 
-        assertEquals(5L, result.get().getId());
+        assertEquals(5L, result.getId());
     }
 
     @Test
-    void deleteMissingCompanyReturnsFalse() {
+    void deleteMissingCompanyThrowsException() {
         when(companyRepository.existsById(1L)).thenReturn(false);
 
-        assertFalse(companyService.deleteById(1L));
+        assertThrows(EntityNotFoundException.class, () -> companyService.deleteById(1L));
         verify(companyRepository, never()).deleteById(any());
     }
 
@@ -83,7 +87,7 @@ class CompanyAndProductServiceTest extends MockRepositoriesTest {
     void deleteExistingCompany() {
         when(companyRepository.existsById(1L)).thenReturn(true);
 
-        assertTrue(companyService.deleteById(1L));
+        companyService.deleteById(1L);
         verify(companyRepository).deleteById(1L);
     }
 

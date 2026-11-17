@@ -5,7 +5,6 @@ import com.example.crm.repository.CompanyRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CompanyService extends AbstractService<Company> {
@@ -13,7 +12,7 @@ public class CompanyService extends AbstractService<Company> {
     private final CompanyRepository companyRepository;
 
     public CompanyService(CompanyRepository companyRepository) {
-        super(companyRepository);
+        super(companyRepository, "Компания");
         this.companyRepository = companyRepository;
     }
 
@@ -27,16 +26,16 @@ public class CompanyService extends AbstractService<Company> {
 
     /** Создает компанию (id из запроса игнорируется). */
     public Company create(Company company) {
+        requireUnique(companyRepository.findByName(company.getName()), null, "name");
         company.setId(null);
         return save(company);
     }
 
-    /** Обновляет компанию. Возвращает empty, если компании с таким id нет. */
-    public Optional<Company> update(Long id, Company company) {
-        if (!existsById(id)) {
-            return Optional.empty();
-        }
+    /** Обновляет компанию. */
+    public Company update(Long id, Company company) {
+        requireExists(id);
+        requireUnique(companyRepository.findByName(company.getName()), id, "name");
         company.setId(id);
-        return Optional.of(save(company));
+        return save(company);
     }
 }

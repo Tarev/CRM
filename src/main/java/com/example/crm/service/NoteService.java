@@ -7,7 +7,6 @@ import com.example.crm.repository.NoteRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class NoteService extends AbstractService<Note> {
@@ -16,7 +15,7 @@ public class NoteService extends AbstractService<Note> {
     private final DealService dealService;
 
     public NoteService(NoteRepository noteRepository, DealService dealService) {
-        super(noteRepository);
+        super(noteRepository, "Заметка");
         this.noteRepository = noteRepository;
         this.dealService = dealService;
     }
@@ -29,24 +28,18 @@ public class NoteService extends AbstractService<Note> {
         return noteRepository.findByDealIdOrderByCreatedAtAsc(dealId);
     }
 
-    /** Создает заметку. Возвращает empty, если сделка не найдена. */
-    public Optional<Note> create(NoteRequest request) {
-        Optional<Deal> deal = dealService.findById(request.getDealId());
-        if (deal.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(save(new Note(deal.get(), request.getText())));
+    /** Создает заметку. */
+    public Note create(NoteRequest request) {
+        Deal deal = dealService.requireReference(request.getDealId());
+        return save(new Note(deal, request.getText()));
     }
 
-    /** Обновляет заметку (дата создания не меняется). Возвращает empty, если заметка или сделка не найдены. */
-    public Optional<Note> update(Long id, NoteRequest request) {
-        Optional<Note> note = findById(id);
-        Optional<Deal> deal = dealService.findById(request.getDealId());
-        if (note.isEmpty() || deal.isEmpty()) {
-            return Optional.empty();
-        }
-        note.get().setDeal(deal.get());
-        note.get().setText(request.getText());
-        return Optional.of(save(note.get()));
+    /** Обновляет заметку (дата создания не меняется). */
+    public Note update(Long id, NoteRequest request) {
+        Note note = getById(id);
+        Deal deal = dealService.requireReference(request.getDealId());
+        note.setDeal(deal);
+        note.setText(request.getText());
+        return save(note);
     }
 }

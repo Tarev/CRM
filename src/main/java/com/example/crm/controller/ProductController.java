@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/products")
@@ -35,11 +34,7 @@ public class ProductController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Product> getById(@PathVariable Long id) {
-        Optional<Product> found = productService.findById(id);
-        if (found.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(found.get());
+        return ResponseEntity.ok(productService.getById(id));
     }
 
     @PostMapping
@@ -49,21 +44,12 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Product> update(@PathVariable Long id, @Valid @RequestBody Product body) {
-        if (!productService.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        Optional<Product> updated = productService.update(id, body);
-        if (updated.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(updated.get());
+        return ResponseEntity.ok(productService.update(id, body));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (!productService.deleteById(id)) {
-            return ResponseEntity.notFound().build();
-        }
+        productService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }

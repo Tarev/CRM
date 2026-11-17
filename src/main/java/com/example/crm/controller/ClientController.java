@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/clients")
@@ -37,39 +36,22 @@ public class ClientController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Client> getById(@PathVariable Long id) {
-        Optional<Client> found = clientService.findById(id);
-        if (found.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(found.get());
+        return ResponseEntity.ok(clientService.getById(id));
     }
 
     @PostMapping
     public ResponseEntity<Client> create(@Valid @RequestBody ClientRequest request) {
-        Optional<Client> created = clientService.create(request);
-        if (created.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(created.get());
+        return ResponseEntity.status(HttpStatus.CREATED).body(clientService.create(request));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Client> update(@PathVariable Long id, @Valid @RequestBody ClientRequest request) {
-        if (!clientService.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        Optional<Client> updated = clientService.update(id, request);
-        if (updated.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(updated.get());
+        return ResponseEntity.ok(clientService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (!clientService.deleteById(id)) {
-            return ResponseEntity.notFound().build();
-        }
+        clientService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }

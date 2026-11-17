@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/companies")
@@ -33,11 +32,7 @@ public class CompanyController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Company> getById(@PathVariable Long id) {
-        Optional<Company> found = companyService.findById(id);
-        if (found.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(found.get());
+        return ResponseEntity.ok(companyService.getById(id));
     }
 
     @PostMapping
@@ -47,21 +42,12 @@ public class CompanyController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Company> update(@PathVariable Long id, @Valid @RequestBody Company body) {
-        if (!companyService.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        Optional<Company> updated = companyService.update(id, body);
-        if (updated.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(updated.get());
+        return ResponseEntity.ok(companyService.update(id, body));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (!companyService.deleteById(id)) {
-            return ResponseEntity.notFound().build();
-        }
+        companyService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }

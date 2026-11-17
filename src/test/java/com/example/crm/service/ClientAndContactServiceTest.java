@@ -3,10 +3,13 @@ package com.example.crm.service;
 import com.example.crm.MockRepositoriesTest;
 import com.example.crm.dto.ClientRequest;
 import com.example.crm.dto.ContactRequest;
+import com.example.crm.exception.EntityNotFoundException;
+import com.example.crm.exception.InvalidReferenceException;
 import com.example.crm.model.Client;
 import com.example.crm.model.ClientType;
 import com.example.crm.model.Company;
 import com.example.crm.model.Contact;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -15,6 +18,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -48,36 +52,34 @@ class ClientAndContactServiceTest extends MockRepositoriesTest {
         when(companyRepository.findById(1L)).thenReturn(Optional.of(company(1L)));
         when(clientRepository.save(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Optional<Client> result = clientService.create(clientRequest(1L));
+        Client result = clientService.create(clientRequest(1L));
 
-        assertTrue(result.isPresent());
-        assertEquals("Romashka", result.get().getCompany().getName());
-        assertEquals(ClientType.INDIVIDUAL, result.get().getClientType());
+        assertEquals("Romashka", result.getCompany().getName());
+        assertEquals(ClientType.INDIVIDUAL, result.getClientType());
     }
 
     @Test
     void createClientWithoutCompany() {
         when(clientRepository.save(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Optional<Client> result = clientService.create(clientRequest(null));
+        Client result = clientService.create(clientRequest(null));
 
-        assertTrue(result.isPresent());
-        assertNull(result.get().getCompany());
+        assertNull(result.getCompany());
     }
 
     @Test
-    void createClientWithUnknownCompanyReturnsEmpty() {
+    void createClientWithUnknownCompanyThrowsException() {
         when(companyRepository.findById(9L)).thenReturn(Optional.empty());
 
-        assertTrue(clientService.create(clientRequest(9L)).isEmpty());
+        assertThrows(InvalidReferenceException.class, () -> clientService.create(clientRequest(9L)));
         verify(clientRepository, never()).save(any());
     }
 
     @Test
-    void updateMissingClientReturnsEmpty() {
+    void updateMissingClientThrowsException() {
         when(clientRepository.findById(5L)).thenReturn(Optional.empty());
 
-        assertTrue(clientService.update(5L, clientRequest(null)).isEmpty());
+        assertThrows(EntityNotFoundException.class, () -> clientService.update(5L, clientRequest(null)));
     }
 
     @Test
@@ -88,10 +90,10 @@ class ClientAndContactServiceTest extends MockRepositoriesTest {
         when(clientRepository.findById(5L)).thenReturn(Optional.of(client));
         when(clientRepository.save(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Optional<Client> result = clientService.update(5L, clientRequest(null));
+        Client result = clientService.update(5L, clientRequest(null));
 
-        assertEquals("Ivan", result.get().getName());
-        assertEquals(ClientType.COMPANY, result.get().getClientType());
+        assertEquals("Ivan", result.getName());
+        assertEquals(ClientType.COMPANY, result.getClientType());
     }
 
     @Test
@@ -117,7 +119,7 @@ class ClientAndContactServiceTest extends MockRepositoriesTest {
         request.setCompanyId(3L);
         when(companyRepository.findById(3L)).thenReturn(Optional.empty());
 
-        assertTrue(contactService.create(request).isEmpty());
+        assertThrows(InvalidReferenceException.class, () -> contactService.create(request));
     }
 
     @Test
@@ -130,10 +132,10 @@ class ClientAndContactServiceTest extends MockRepositoriesTest {
         when(companyRepository.findById(3L)).thenReturn(Optional.of(company(3L)));
         when(contactRepository.save(any(Contact.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Optional<Contact> result = contactService.create(request);
+        Contact result = contactService.create(request);
 
-        assertEquals("Director", result.get().getPosition());
-        assertEquals(3L, result.get().getCompany().getId());
+        assertEquals("Director", result.getPosition());
+        assertEquals(3L, result.getCompany().getId());
     }
 
     @Test

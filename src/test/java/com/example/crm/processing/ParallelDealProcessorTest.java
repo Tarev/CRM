@@ -1,7 +1,9 @@
 package com.example.crm.processing;
 
+import com.example.crm.exception.DealProcessingException;
 import com.example.crm.model.Deal;
 import com.example.crm.model.DealStatus;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ParallelDealProcessorTest {
 
@@ -64,5 +68,27 @@ class ParallelDealProcessorTest {
     @Test
     void zeroThreadsIsRejected() {
         assertThrows(IllegalArgumentException.class, () -> new ParallelDealProcessor(0));
+    }
+    @Test
+    void workerFailurePreservesOriginalCause() {
+        Deal broken = mock(Deal.class);
+        IllegalStateException cause = new IllegalStateException("broken deal");
+        when(broken.getStatus()).thenThrow(cause);
+        DealProcessingException exception = assertThrows(DealProcessingException.class,
+                () -> new ParallelDealProcessor(1).process(List.of(broken)));
+        assertEquals(cause, exception.getCause());
+    }
+
+    @Test
+    void interruptedCallerPreservesInterruptFlagAndFails() {
+        try {
+            Thread.currentThread().interrupt();
+            assertThrows(DealProcessingException.class,
+                    () -> new ParallelDealProcessor(1).process(createDeals(1)));
+            assertTrue(Thread.currentThread().isInterrupted());
+        } finally {
+            // Не передаем прерывание следующему тесту в этом потоке.
+            Thread.interrupted();
+        }
     }
 }
