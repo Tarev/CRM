@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/notes")
@@ -34,39 +33,22 @@ public class NoteController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Note> getById(@PathVariable Long id) {
-        Optional<Note> found = noteService.findById(id);
-        if (found.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(found.get());
+        return ResponseEntity.ok(noteService.getById(id));
     }
 
     @PostMapping
     public ResponseEntity<Note> create(@Valid @RequestBody NoteRequest request) {
-        Optional<Note> created = noteService.create(request);
-        if (created.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(created.get());
+        return ResponseEntity.status(HttpStatus.CREATED).body(noteService.create(request));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Note> update(@PathVariable Long id, @Valid @RequestBody NoteRequest request) {
-        if (!noteService.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        Optional<Note> updated = noteService.update(id, request);
-        if (updated.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(updated.get());
+        return ResponseEntity.ok(noteService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (!noteService.deleteById(id)) {
-            return ResponseEntity.notFound().build();
-        }
+        noteService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }

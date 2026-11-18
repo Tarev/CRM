@@ -4,6 +4,9 @@ import com.example.crm.MockRepositoriesTest;
 import com.example.crm.dto.NoteRequest;
 import com.example.crm.dto.TaskRequest;
 import com.example.crm.dto.UserRequest;
+import com.example.crm.exception.BusinessRuleViolationException;
+import com.example.crm.exception.EntityNotFoundException;
+import com.example.crm.exception.InvalidReferenceException;
 import com.example.crm.model.Client;
 import com.example.crm.model.Deal;
 import com.example.crm.model.Note;
@@ -13,6 +16,7 @@ import com.example.crm.model.user.CustomerUser;
 import com.example.crm.model.user.ManagerUser;
 import com.example.crm.model.user.User;
 import com.example.crm.model.user.UserRole;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -24,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -66,27 +71,26 @@ class TaskNoteUserServiceTest extends MockRepositoriesTest {
         when(userRepository.findById(2L)).thenReturn(Optional.of(new ManagerUser("m", "M")));
         when(taskRepository.save(any(Task.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Optional<Task> result = taskService.create(taskRequest(null));
+        Task result = taskService.create(taskRequest(null));
 
-        assertTrue(result.isPresent());
-        assertNull(result.get().getDeal());
-        assertFalse(result.get().isDone());
+        assertNull(result.getDeal());
+        assertFalse(result.isDone());
     }
 
     @Test
-    void createTaskWithUnknownAssigneeReturnsEmpty() {
+    void createTaskWithUnknownAssigneeThrowsException() {
         when(userRepository.findById(2L)).thenReturn(Optional.empty());
 
-        assertTrue(taskService.create(taskRequest(null)).isEmpty());
+        assertThrows(InvalidReferenceException.class, () -> taskService.create(taskRequest(null)));
         verify(taskRepository, never()).save(any());
     }
 
     @Test
-    void createTaskWithUnknownDealReturnsEmpty() {
+    void createTaskWithUnknownDealThrowsException() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(new ManagerUser("m", "M")));
         when(dealRepository.findById(8L)).thenReturn(Optional.empty());
 
-        assertTrue(taskService.create(taskRequest(8L)).isEmpty());
+        assertThrows(InvalidReferenceException.class, () -> taskService.create(taskRequest(8L)));
     }
 
     @Test
@@ -95,14 +99,14 @@ class TaskNoteUserServiceTest extends MockRepositoriesTest {
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         when(taskRepository.save(any(Task.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertTrue(taskService.markDone(1L).get().isDone());
+        assertTrue(taskService.markDone(1L).isDone());
     }
 
     @Test
-    void markDoneOfMissingTaskReturnsEmpty() {
+    void markDoneOfMissingTaskThrowsException() {
         when(taskRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertTrue(taskService.markDone(1L).isEmpty());
+        assertThrows(EntityNotFoundException.class, () -> taskService.markDone(1L));
     }
 
     @Test
@@ -123,20 +127,20 @@ class TaskNoteUserServiceTest extends MockRepositoriesTest {
         when(dealRepository.findById(1L)).thenReturn(Optional.of(new Deal()));
         when(noteRepository.save(any(Note.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Optional<Note> result = noteService.create(request);
+        Note result = noteService.create(request);
 
-        assertNotNull(result.get().getCreatedAt());
-        assertEquals("text", result.get().getText());
+        assertNotNull(result.getCreatedAt());
+        assertEquals("text", result.getText());
     }
 
     @Test
-    void createNoteForUnknownDealReturnsEmpty() {
+    void createNoteForUnknownDealThrowsException() {
         NoteRequest request = new NoteRequest();
         request.setDealId(1L);
         request.setText("text");
         when(dealRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertTrue(noteService.create(request).isEmpty());
+        assertThrows(InvalidReferenceException.class, () -> noteService.create(request));
     }
 
     @Test
@@ -152,9 +156,9 @@ class TaskNoteUserServiceTest extends MockRepositoriesTest {
     void createUserCreatesClassByRole() {
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertTrue(userService.create(userRequest(UserRole.ADMIN, null)).get() instanceof AdminUser);
-        assertTrue(userService.create(userRequest(UserRole.MANAGER, null)).get() instanceof ManagerUser);
-        assertTrue(userService.create(userRequest(UserRole.CUSTOMER, null)).get() instanceof CustomerUser);
+        assertTrue(userService.create(userRequest(UserRole.ADMIN, null)) instanceof AdminUser);
+        assertTrue(userService.create(userRequest(UserRole.MANAGER, null)) instanceof ManagerUser);
+        assertTrue(userService.create(userRequest(UserRole.CUSTOMER, null)) instanceof CustomerUser);
     }
 
     @Test
@@ -164,21 +168,21 @@ class TaskNoteUserServiceTest extends MockRepositoriesTest {
         when(clientRepository.findById(4L)).thenReturn(Optional.of(client));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        CustomerUser customer = (CustomerUser) userService.create(userRequest(UserRole.CUSTOMER, 4L)).get();
+        CustomerUser customer = (CustomerUser) userService.create(userRequest(UserRole.CUSTOMER, 4L));
 
         assertEquals(4L, customer.getClient().getId());
     }
 
     @Test
-    void createCustomerWithUnknownClientReturnsEmpty() {
+    void createCustomerWithUnknownClientThrowsException() {
         when(clientRepository.findById(4L)).thenReturn(Optional.empty());
 
-        assertTrue(userService.create(userRequest(UserRole.CUSTOMER, 4L)).isEmpty());
+        assertThrows(InvalidReferenceException.class, () -> userService.create(userRequest(UserRole.CUSTOMER, 4L)));
     }
 
     @Test
     void adminCannotHaveClient() {
-        assertTrue(userService.create(userRequest(UserRole.ADMIN, 4L)).isEmpty());
+        assertThrows(BusinessRuleViolationException.class, () -> userService.create(userRequest(UserRole.ADMIN, 4L)));
         verify(userRepository, never()).save(any());
     }
 
@@ -186,7 +190,7 @@ class TaskNoteUserServiceTest extends MockRepositoriesTest {
     void roleCannotBeChanged() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(new ManagerUser("m", "M")));
 
-        assertTrue(userService.update(1L, userRequest(UserRole.ADMIN, null)).isEmpty());
+        assertThrows(BusinessRuleViolationException.class, () -> userService.update(1L, userRequest(UserRole.ADMIN, null)));
     }
 
     @Test
@@ -194,7 +198,7 @@ class TaskNoteUserServiceTest extends MockRepositoriesTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(new ManagerUser("m", "M")));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        User result = userService.update(1L, userRequest(UserRole.MANAGER, null)).get();
+        User result = userService.update(1L, userRequest(UserRole.MANAGER, null));
 
         assertEquals("Full Name", result.getFullName());
     }

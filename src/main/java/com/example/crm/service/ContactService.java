@@ -7,7 +7,6 @@ import com.example.crm.repository.ContactRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ContactService extends AbstractService<Contact> {
@@ -16,7 +15,7 @@ public class ContactService extends AbstractService<Contact> {
     private final CompanyService companyService;
 
     public ContactService(ContactRepository contactRepository, CompanyService companyService) {
-        super(contactRepository);
+        super(contactRepository, "Контакт");
         this.contactRepository = contactRepository;
         this.companyService = companyService;
     }
@@ -29,29 +28,24 @@ public class ContactService extends AbstractService<Contact> {
         return contactRepository.findByCompanyId(companyId);
     }
 
-    /** Создает контакт. Возвращает empty, если компания не найдена. */
-    public Optional<Contact> create(ContactRequest request) {
+    /** Создает контакт. */
+    public Contact create(ContactRequest request) {
         return fillAndSave(new Contact(), request);
     }
 
-    /** Обновляет контакт. Возвращает empty, если контакт или компания не найдены. */
-    public Optional<Contact> update(Long id, ContactRequest request) {
-        Optional<Contact> contact = findById(id);
-        if (contact.isEmpty()) {
-            return Optional.empty();
-        }
-        return fillAndSave(contact.get(), request);
+    /** Обновляет контакт. */
+    public Contact update(Long id, ContactRequest request) {
+        Contact contact = getById(id);
+        return fillAndSave(contact, request);
     }
 
-    private Optional<Contact> fillAndSave(Contact contact, ContactRequest request) {
-        Optional<Company> company = companyService.findById(request.getCompanyId());
-        if (company.isEmpty()) {
-            return Optional.empty();
-        }
+    private Contact fillAndSave(Contact contact, ContactRequest request) {
+        Company company = companyService.requireReference(request.getCompanyId());
+        requireUnique(contactRepository.findByEmail(request.getEmail()), contact.getId(), "email");
         contact.setEmail(request.getEmail());
         contact.setFullName(request.getFullName());
         contact.setPosition(request.getPosition());
-        contact.setCompany(company.get());
-        return Optional.of(save(contact));
+        contact.setCompany(company);
+        return save(contact);
     }
 }

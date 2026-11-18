@@ -12,6 +12,8 @@ import java.util.List;
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
+    boolean existsByAssigneeId(Long assigneeId);
+
     /** Невыполненные задачи, срок которых раньше указанной даты. */
     List<Task> findByDoneFalseAndDeadlineBefore(LocalDate date);
 

@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -43,49 +42,28 @@ public class TaskController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Task> getById(@PathVariable Long id) {
-        Optional<Task> found = taskService.findById(id);
-        if (found.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(found.get());
+        return ResponseEntity.ok(taskService.getById(id));
     }
 
     @PostMapping
     public ResponseEntity<Task> create(@Valid @RequestBody TaskRequest request) {
-        Optional<Task> created = taskService.create(request);
-        if (created.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(created.get());
+        return ResponseEntity.status(HttpStatus.CREATED).body(taskService.create(request));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Task> update(@PathVariable Long id, @Valid @RequestBody TaskRequest request) {
-        if (!taskService.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        Optional<Task> updated = taskService.update(id, request);
-        if (updated.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(updated.get());
+        return ResponseEntity.ok(taskService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (!taskService.deleteById(id)) {
-            return ResponseEntity.notFound().build();
-        }
+        taskService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
     /** Отмечает задачу выполненной. */
     @PatchMapping("/{id}/done")
     public ResponseEntity<Task> markDone(@PathVariable Long id) {
-        Optional<Task> task = taskService.markDone(id);
-        if (task.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(task.get());
+        return ResponseEntity.ok(taskService.markDone(id));
     }
 }

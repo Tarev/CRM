@@ -9,9 +9,16 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DealRepository extends JpaRepository<Deal, Long> {
+
+    Optional<Deal> findByDealNumber(String value);
+
+    boolean existsByClientId(Long clientId);
+
+    boolean existsByProductId(Long productId);
 
     List<Deal> findByStatus(DealStatus status);
 

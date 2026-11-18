@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TaskService extends AbstractService<Task> {
@@ -19,7 +18,7 @@ public class TaskService extends AbstractService<Task> {
     private final UserService userService;
 
     public TaskService(TaskRepository taskRepository, DealService dealService, UserService userService) {
-        super(taskRepository);
+        super(taskRepository, "Задача");
         this.taskRepository = taskRepository;
         this.dealService = dealService;
         this.userService = userService;
@@ -35,48 +34,35 @@ public class TaskService extends AbstractService<Task> {
         return taskRepository.findByDoneFalseAndDeadlineBefore(today);
     }
 
-    /** Создает задачу. Возвращает empty, если исполнитель или сделка не найдены. */
-    public Optional<Task> create(TaskRequest request) {
+    /** Создает задачу. */
+    public Task create(TaskRequest request) {
         return fillAndSave(new Task(), request);
     }
 
-    /** Обновляет задачу. Возвращает empty, если задача, исполнитель или сделка не найдены. */
-    public Optional<Task> update(Long id, TaskRequest request) {
-        Optional<Task> task = findById(id);
-        if (task.isEmpty()) {
-            return Optional.empty();
-        }
-        return fillAndSave(task.get(), request);
+    /** Обновляет задачу. */
+    public Task update(Long id, TaskRequest request) {
+        Task task = getById(id);
+        return fillAndSave(task, request);
     }
 
-    /** Отмечает задачу выполненной. Возвращает empty, если задача не найдена. */
-    public Optional<Task> markDone(Long id) {
-        Optional<Task> task = findById(id);
-        if (task.isEmpty()) {
-            return Optional.empty();
-        }
-        task.get().setDone(true);
-        return Optional.of(save(task.get()));
+    /** Отмечает задачу выполненной. */
+    public Task markDone(Long id) {
+        Task task = getById(id);
+        task.setDone(true);
+        return save(task);
     }
 
-    private Optional<Task> fillAndSave(Task task, TaskRequest request) {
-        Optional<User> assignee = userService.findById(request.getAssigneeId());
-        if (assignee.isEmpty()) {
-            return Optional.empty();
-        }
+    private Task fillAndSave(Task task, TaskRequest request) {
+        User assignee = userService.requireReference(request.getAssigneeId());
         Deal deal = null;
         if (request.getDealId() != null) {
-            Optional<Deal> found = dealService.findById(request.getDealId());
-            if (found.isEmpty()) {
-                return Optional.empty();
-            }
-            deal = found.get();
+            deal = dealService.requireReference(request.getDealId());
         }
         task.setTitle(request.getTitle());
         task.setDeadline(request.getDeadline());
         task.setDone(request.getDone() != null && request.getDone());
         task.setDeal(deal);
-        task.setAssignee(assignee.get());
-        return Optional.of(save(task));
+        task.setAssignee(assignee);
+        return save(task);
     }
 }

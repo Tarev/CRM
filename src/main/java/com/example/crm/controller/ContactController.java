@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/contacts")
@@ -34,39 +33,22 @@ public class ContactController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Contact> getById(@PathVariable Long id) {
-        Optional<Contact> found = contactService.findById(id);
-        if (found.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(found.get());
+        return ResponseEntity.ok(contactService.getById(id));
     }
 
     @PostMapping
     public ResponseEntity<Contact> create(@Valid @RequestBody ContactRequest request) {
-        Optional<Contact> created = contactService.create(request);
-        if (created.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(created.get());
+        return ResponseEntity.status(HttpStatus.CREATED).body(contactService.create(request));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Contact> update(@PathVariable Long id, @Valid @RequestBody ContactRequest request) {
-        if (!contactService.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        Optional<Contact> updated = contactService.update(id, request);
-        if (updated.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(updated.get());
+        return ResponseEntity.ok(contactService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (!contactService.deleteById(id)) {
-            return ResponseEntity.notFound().build();
-        }
+        contactService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }

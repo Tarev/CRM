@@ -8,9 +8,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ClientRepository extends JpaRepository<Client, Long> {
+
+    Optional<Client> findByEmail(String value);
 
     /** Фильтры необязательные: если параметр null, он не учитывается. Имя передается "" вместо null. */
     @Query("select c from Client c where lower(c.name) like lower(concat('%', :name, '%'))"

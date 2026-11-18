@@ -2,17 +2,18 @@ package com.example.crm.service;
 
 import com.example.crm.dto.DealRequest;
 import com.example.crm.dto.ProcessResponse;
+import com.example.crm.exception.BusinessRuleViolationException;
 import com.example.crm.model.Client;
 import com.example.crm.model.Deal;
 import com.example.crm.model.DealStatus;
 import com.example.crm.model.Product;
 import com.example.crm.processing.DealProcessor;
 import com.example.crm.repository.DealRepository;
+
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -25,7 +26,7 @@ public class DealService extends AbstractService<Deal> {
 
     public DealService(DealRepository dealRepository, ClientService clientService,
                        ProductService productService, DealProcessor dealProcessor) {
-        super(dealRepository);
+        super(dealRepository, "Сделка");
         this.dealRepository = dealRepository;
         this.clientService = clientService;
         this.productService = productService;
@@ -34,31 +35,29 @@ public class DealService extends AbstractService<Deal> {
 
     /** Поиск по статусу, клиенту и диапазону суммы. Любой параметр можно не указывать (null). */
     public List<Deal> search(DealStatus status, Long clientId, BigDecimal minAmount, BigDecimal maxAmount) {
+        if (minAmount != null && maxAmount != null && minAmount.compareTo(maxAmount) > 0) {
+            throw new BusinessRuleViolationException(
+                    "Минимальная сумма больше максимальной.", "Укажите minAmount не больше maxAmount.");
+        }
         return dealRepository.search(status, clientId, minAmount, maxAmount);
     }
 
-    /** Создает сделку. Возвращает empty, если клиент или продукт не найдены. */
-    public Optional<Deal> create(DealRequest request) {
+    /** Создает сделку. */
+    public Deal create(DealRequest request) {
         return fillAndSave(new Deal(), request);
     }
 
-    /** Обновляет сделку. Возвращает empty, если сделка, клиент или продукт не найдены. */
-    public Optional<Deal> update(Long id, DealRequest request) {
-        Optional<Deal> deal = findById(id);
-        if (deal.isEmpty()) {
-            return Optional.empty();
-        }
-        return fillAndSave(deal.get(), request);
+    /** Обновляет сделку. */
+    public Deal update(Long id, DealRequest request) {
+        Deal deal = getById(id);
+        return fillAndSave(deal, request);
     }
 
-    /** Меняет статус сделки. Возвращает empty, если сделка не найдена. */
-    public Optional<Deal> changeStatus(Long id, DealStatus status) {
-        Optional<Deal> deal = findById(id);
-        if (deal.isEmpty()) {
-            return Optional.empty();
-        }
-        deal.get().setStatus(status);
-        return Optional.of(save(deal.get()));
+    /** Меняет статус сделки. */
+    public Deal changeStatus(Long id, DealStatus status) {
+        Deal deal = getById(id);
+        deal.setStatus(status);
+        return save(deal);
     }
 
     /** Сумма всех сделок с указанным статусом. */
@@ -78,20 +77,18 @@ public class DealService extends AbstractService<Deal> {
         return new ProcessResponse(newDeals.size(), threads);
     }
 
-    private Optional<Deal> fillAndSave(Deal deal, DealRequest request) {
-        Optional<Client> client = clientService.findById(request.getClientId());
-        Optional<Product> product = productService.findById(request.getProductId());
-        if (client.isEmpty() || product.isEmpty()) {
-            return Optional.empty();
-        }
+    private Deal fillAndSave(Deal deal, DealRequest request) {
+        Client client = clientService.requireReference(request.getClientId());
+        Product product = productService.requireReference(request.getProductId());
+        requireUnique(dealRepository.findByDealNumber(request.getDealNumber()), deal.getId(), "dealNumber");
         deal.setDealNumber(request.getDealNumber());
         deal.setTitle(request.getTitle());
         deal.setAmount(request.getAmount());
         if (request.getStatus() != null) {
             deal.setStatus(request.getStatus());
         }
-        deal.setClient(client.get());
-        deal.setProduct(product.get());
-        return Optional.of(save(deal));
+        deal.setClient(client);
+        deal.setProduct(product);
+        return save(deal);
     }
 }

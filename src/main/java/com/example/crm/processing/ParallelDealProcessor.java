@@ -1,7 +1,9 @@
 package com.example.crm.processing;
 
+import com.example.crm.exception.DealProcessingException;
 import com.example.crm.model.Deal;
 import com.example.crm.model.DealStatus;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,7 +48,8 @@ public class ParallelDealProcessor implements DealProcessor {
             }
             waitForAll(futures);
         } finally {
-            executor.shutdown();
+            // Прерывает оставшиеся задачи и при ошибке, и при отмене запроса.
+            executor.shutdownNow();
         }
         return threadNames;
     }
@@ -57,10 +60,9 @@ public class ParallelDealProcessor implements DealProcessor {
                 future.get();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                log.warn("Ожидание обработки прервано");
-                return;
+                throw new DealProcessingException("Ожидание обработки сделок прервано.", e);
             } catch (ExecutionException e) {
-                log.error("Ошибка при обработке сделки: {}", e.getCause().getMessage());
+                throw new DealProcessingException("Ошибка в потоке обработки сделки.", e.getCause());
             }
         }
     }
@@ -73,8 +75,7 @@ public class ParallelDealProcessor implements DealProcessor {
             Thread.sleep(WORK_TIME_MS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn("Поток {} прерван", threadName);
-            return;
+            throw new DealProcessingException("Поток обработки сделки прерван.", e);
         }
         if (deal.getStatus() == DealStatus.NEW) {
             deal.setStatus(DealStatus.IN_PROGRESS);

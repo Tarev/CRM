@@ -3,10 +3,13 @@ package com.example.crm.service;
 import com.example.crm.MockRepositoriesTest;
 import com.example.crm.dto.DealRequest;
 import com.example.crm.dto.ProcessResponse;
+import com.example.crm.exception.EntityNotFoundException;
+import com.example.crm.exception.InvalidReferenceException;
 import com.example.crm.model.Client;
 import com.example.crm.model.Deal;
 import com.example.crm.model.DealStatus;
 import com.example.crm.model.Product;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -16,6 +19,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -51,18 +55,17 @@ class DealServiceTest extends MockRepositoriesTest {
         when(productRepository.findById(2L)).thenReturn(Optional.of(new Product()));
         when(dealRepository.save(any(Deal.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Optional<Deal> result = dealService.create(request());
+        Deal result = dealService.create(request());
 
-        assertTrue(result.isPresent());
-        assertEquals(DealStatus.NEW, result.get().getStatus());
+        assertEquals(DealStatus.NEW, result.getStatus());
     }
 
     @Test
-    void createDealWithUnknownProductReturnsEmpty() {
+    void createDealWithUnknownProductThrowsException() {
         when(clientRepository.findById(1L)).thenReturn(Optional.of(new Client()));
         when(productRepository.findById(2L)).thenReturn(Optional.empty());
 
-        assertTrue(dealService.create(request()).isEmpty());
+        assertThrows(InvalidReferenceException.class, () -> dealService.create(request()));
         verify(dealRepository, never()).save(any());
     }
 
@@ -72,16 +75,16 @@ class DealServiceTest extends MockRepositoriesTest {
         when(dealRepository.findById(1L)).thenReturn(Optional.of(deal));
         when(dealRepository.save(any(Deal.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Optional<Deal> result = dealService.changeStatus(1L, DealStatus.WON);
+        Deal result = dealService.changeStatus(1L, DealStatus.WON);
 
-        assertEquals(DealStatus.WON, result.get().getStatus());
+        assertEquals(DealStatus.WON, result.getStatus());
     }
 
     @Test
-    void changeStatusOfMissingDealReturnsEmpty() {
+    void changeStatusOfMissingDealThrowsException() {
         when(dealRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertTrue(dealService.changeStatus(1L, DealStatus.WON).isEmpty());
+        assertThrows(EntityNotFoundException.class, () -> dealService.changeStatus(1L, DealStatus.WON));
     }
 
     @Test

@@ -126,3 +126,57 @@ POST {{host}}/api/users
 Content-Type: application/json
 
 {"login": "anna", "fullName": "Анна Сидорова", "role": "CUSTOMER", "clientId": 2}
+
+### ---------- ЛР3: демонстрация ошибок (каждый запрос запускается отдельно)
+
+### 404 ENTITY_NOT_FOUND (если ID отсутствует)
+GET {{host}}/api/clients/999999999
+
+### 400 VALIDATION_ERROR: сообщения для email и name в fieldErrors
+POST {{host}}/api/clients
+Content-Type: application/json
+
+{"email": "wrong", "name": ""}
+
+### 400 INVALID_REFERENCE: отсутствующая компания
+POST {{host}}/api/clients
+Content-Type: application/json
+
+{"email": "lab3.reference@example.com", "name": "Тест", "companyId": 999999999}
+
+### 400 INVALID_PARAMETER: допустимые статусы указаны в suggestion
+GET {{host}}/api/deals?status=WRONG
+
+### 400 MISSING_PARAMETER: обязателен status
+GET {{host}}/api/deals/total
+
+### 400 INVALID_JSON: неверный тип суммы
+POST {{host}}/api/deals
+Content-Type: application/json
+
+{"dealNumber": "LAB3-ERROR", "title": "Тест", "amount": "abc", "clientId": 1, "productId": 1}
+
+### 400 BUSINESS_RULE_VIOLATION: перевернутый диапазон
+GET {{host}}/api/deals?minAmount=1000&maxAmount=100
+
+### 400 BUSINESS_RULE_VIOLATION: ADMIN нельзя привязать к клиенту
+POST {{host}}/api/users
+Content-Type: application/json
+
+{"login": "lab3_admin", "fullName": "Тест", "role": "ADMIN", "clientId": 1}
+
+### Подготовка к демонстрации 409: создать компанию один раз (201)
+POST {{host}}/api/companies
+Content-Type: application/json
+
+{"name": "Компания для проверки ЛР3", "city": "Москва"}
+
+### 409 DUPLICATE_RESOURCE: повторить то же уникальное название
+POST {{host}}/api/companies
+Content-Type: application/json
+
+{"name": "Компания для проверки ЛР3", "city": "Казань"}
+
+### 409 RESOURCE_IN_USE: только если у клиента 1 есть сделки (см. db/data.sql)
+# При отсутствии связанных сделок запрос действительно удалит клиента.
+DELETE {{host}}/api/clients/1
